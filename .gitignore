@@ -1,0 +1,8 @@
+*h5ad
+*rds
+*pycache*
+*h5seurat*
+pipeline_queries_eric
+pipeline_queries_hsap
+reports
+.vscode
