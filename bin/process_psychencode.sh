@@ -10,7 +10,7 @@
 eval "$(conda shell.bash hook)"
 conda activate /home/rschwartz/anaconda3/envs/scanpyenv
 
-DATA_DIR="/space/grp/rschwartz/rschwartz/get_gemma_data.nf/nairuz_data/homo_sapiens"
+DATA_DIR=$1
 
 ls "$DATA_DIR" | while read line; do
     full_path="$DATA_DIR/$line"

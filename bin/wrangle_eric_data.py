@@ -122,7 +122,7 @@ lim.write_h5ad("lim.h5ad")
 
 
 lau = queries["lau"]
-lau_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_all_files/meta/pnas.2008762117.sd01.xlsx")
+lau_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/meta/pnas.2008762117.sd01.xlsx")
 lau_meta.rename(columns={"ID":"active.ident", "SEX":"sex"}, inplace=True)
 lau.obs=lau.obs.merge(lau_meta, left_on="active.ident", right_on="active.ident")
 lau.obs["disease"] = lau.obs["active.ident"].str[:2].replace("NC","Control")
@@ -133,7 +133,7 @@ lau.obs["region"] = "prefrontal cortex"
 lau.write_h5ad("lau.h5ad")
 
 pineda = queries["pineda"]
-pineda_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_all_files/meta/mmc1.xlsx")
+pineda_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/meta/mmc1.xlsx")
 pineda_meta = pineda_meta[ :-4]
 # make pineda_meta donor an int
 pineda_meta["Donor"] = pineda_meta["Donor"].astype(int)
