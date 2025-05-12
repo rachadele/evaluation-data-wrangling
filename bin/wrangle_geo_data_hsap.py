@@ -48,7 +48,7 @@ study_dev_stage_mapping_dict = {
 def parse_arguments():
   parser = argparse.ArgumentParser(description="Process .h5ad files.")
   parser.add_argument("--directory", type=str, default="/space/grp/rschwartz/rschwartz/get_gemma_data.nf/study_names_human.txt_author_true_sample_split_true/homo_sapiens", help="Directory containing .h5ad files")
-  parser.add_argument("--outdir", type=str, default="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_hsap/test", help="Output directory for processed files")
+  parser.add_argument("--outdir", type=str, default="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_hsap/sample_subsets", help="Output directory for processed files")
   parser.add_argument("--meta_path", type=str, help="Path to metadata files", default ="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/meta/GEO_meta")
   if __name__ == "__main__":
     known_args, _ = parser.parse_known_args()
