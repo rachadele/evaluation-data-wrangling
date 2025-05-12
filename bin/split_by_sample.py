@@ -17,7 +17,7 @@ import argparse
 def parse_arguments():
   parser = argparse.ArgumentParser(description="Download model file based on organism, census version, and tree file.")
   parser.add_argument('--query_path', type=str, default="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/lim.h5ad")
-  parser.add_argument('--outdir', default="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/sample_subsets")
+  parser.add_argument('--outdir', default="/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_hsap/sample_subsets")
   
   if __name__ == "__main__":
     known_args, _ = parser.parse_known_args()
