@@ -19,6 +19,7 @@ import argparse
 import os
 import json
 
+#-----map age to development stage-----
 dev_stage_mapping_dict = {
     range(0, 3): "HsapDv_0000083",
     range(2, 6): "HsapDv_0000084",
@@ -36,7 +37,7 @@ def get_dev_stage(age):
     return ""  # For out-of-range values
 
 
-
+#------------------read in data------------------
 queries = {}
 for root,dirs, files in os.walk("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/h5ad"):
     for file in files:
@@ -47,6 +48,8 @@ for root,dirs, files in os.walk("/space/grp/rschwartz/rschwartz/evaluation_data_
             queries[query_name] = query
 os.chdir("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/h5ad")
 
+
+#------------------nagy-------------------
 nagy = queries["nagy"]
 nagy.obs["meta"] = nagy.obs.index
 nagy.obs["disease"] = nagy.obs["meta"].str.split("_").apply(lambda x: next((i for i in x if i in ["Suicide", "Control"]), None))
@@ -59,7 +62,7 @@ nagy.obs["sex"] = "M"
 nagy.obs["age"] = 38.71
 nagy.write_h5ad("nagy.h5ad")
 
-
+#------------------velmeshev-------------------
 velmeshev = queries["velmeshev"]
 velmeshev.obs["region"] = velmeshev.obs["region"].str.replace("PFC","prefrontal cortex")
 velmeshev.obs["region"] = velmeshev.obs["region"].str.replace("ACC","anterior cingulate cortex")
@@ -67,8 +70,9 @@ velmeshev.obs["dev_stage"] = velmeshev.obs["age"].apply(get_dev_stage)
 velmeshev.obs.rename(columns={"diagnosis":"disease"})
 velmeshev.write_h5ad("velmeshev.h5ad")
 
+#------------------lim-------------------
 lim = queries["lim"]
-lim_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/meta/lim_41467_2022_35388_MOESM8_ESM.xlsx")
+lim_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/meta/eric_metadata/lim_41467_2022_35388_MOESM8_ESM.xlsx")
 lim_meta["id"] = lim_meta["Donor"].str.replace("T-","")
 lim_meta["id"] = lim_meta["id"] + "_" + lim_meta["Region"]
 lim.obs["id"] = lim.obs["case_num"].str.replace(r'[a-zA-Z]', '', regex=True)
@@ -93,9 +97,9 @@ lim.obs["region"] = lim.obs["region"].str.replace("Caudate","caudate nucleus")
 lim.obs["region"] = lim.obs["region"].str.replace("Accumbens","nucleus accumbens")
 lim.write_h5ad("lim.h5ad")
 
-
+#------------------lau-------------------
 lau = queries["lau"]
-lau_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/meta/lau_pnas.2008762117.sd01.xlsx")
+lau_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/meta/eric_metadata/lau_pnas.2008762117.sd01.xlsx")
 lau_meta.rename(columns={"ID":"active.ident", "SEX":"sex"}, inplace=True)
 lau.obs=lau.obs.merge(lau_meta, left_on="active.ident", right_on="active.ident")
 lau.obs["disease"] = lau.obs["active.ident"].str[:2].replace("NC","Control")
@@ -105,25 +109,44 @@ lau.obs["dev_stage"] = lau.obs["age"].apply(get_dev_stage)
 lau.obs["region"] = "prefrontal cortex"
 lau.write_h5ad("lau.h5ad")
 
+
+#------------------pineda-------------------
 pineda = queries["pineda"]
-pineda_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling/pipeline_queries_eric/meta/pineda_mmc1.xlsx")
+pineda_meta = pd.read_excel("/space/grp/rschwartz/rschwartz/evaluation_data_wrangling//meta/eric_metadata/pineda_mmc1.xlsx")
 pineda_meta = pineda_meta[ :-4]
 # make pineda_meta donor an int
 pineda_meta["Donor"] = pineda_meta["Donor"].astype(int)
 # make pineda mayo ID a string
 pineda.obs["Mayo_ID"] = pineda.obs["Mayo_ID"].astype(int)
-# donors don't match between pineda and pineda_meta
-#pineda.obs = pineda.obs.merge(pineda_meta, left_on="Mayo_ID", right_on="Donor", suffixes=("","_y"))
+#drop duplicate colnames in pineda.obs
+pineda.obs = pineda.obs.loc[:,~pineda.obs.columns.duplicated()]
+# Mayo ID 224 and 308 are misising from pineda_meta
+# keep all donors in pineda_obs using how="left"
+pineda.obs = pineda.obs.merge(pineda_meta, how="left", left_on="Mayo_ID", right_on="Donor", suffixes=("","_y"))
 # drop columns ending in y
 pineda.obs = pineda.obs.loc[:,~pineda.obs.columns.str.endswith("_y")]
-pineda.obs.rename(columns={"Sex":"sex"}, inplace=True)
+#pineda.obs.rename(columns={"Sex":"sex"}, inplace=True)
 pineda.obs["sex"]=pineda.obs["sex"].str.replace("FALSE","F")
 pineda.obs["disease"] = pineda.obs["Condition"].str.replace("PN","Control")
 pineda.obs["age"] = pineda.obs["Age of death (Y)"]
-pineda.obs["dev_stage"] = "HsapDv_0000091" 
+
+#fill "NR" and "NA" with nan in all columns
+pineda.obs = pineda.obs.replace("NR", np.nan)
+pineda.obs = pineda.obs.replace("NA", np.nan)
+
+# deal with weird values in PMI_H
+pineda.obs["PMI_h"] = pineda.obs["PMI_h"].replace("NR; very short", np.nan)
+
+# replace "NR" and nan with median for age 
+pineda.obs["age"] = pd.to_numeric(pineda.obs["age"], errors="coerce")
+pineda.obs["age"] = pineda.obs["age"].fillna(pineda.obs["age"].median()).astype(int)
+
+pineda.obs["dev_stage"] = pineda.obs["age"].apply(get_dev_stage)
 pineda.obs["region"] = "primary motor cortex"
 pineda.write_h5ad("pineda.h5ad")
 
+
+#-----------------rosmap-------------------
 rosmap = queries["rosmap"]
 rosmap_meta = {}
 for root, dir, file in os.walk("/space/scratch/ericchu/r_cache/041_CH4_FINAL/data/rosmap"):
